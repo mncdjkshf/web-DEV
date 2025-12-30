@@ -1,6 +1,6 @@
 {
-  "name": "Copy of Nexus AI Digital Agency",
-  "description": "A premium, conversion-focused digital agency website showcasing professional web development services integrated with cutting-edge Gemini AI capabilities including image/video generation and real-time voice assistance.",
+  "name": "Nexus Studio | AI-Driven Web Agency",
+  "description": "A refined, human-centric agency website featuring premium web development and an interactive innovation lab powered by the latest Gemini 3 models.",
   "requestFramePermissions": [
     "camera",
     "microphone"

@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type, Modality, GenerateContentResponse, Chat } from "@google/genai";
+import { GoogleGenAI, Type, Modality, GenerateContentResponse, Chat, LiveServerMessage } from "@google/genai";
 
 // Standard client for most tasks
 const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -14,7 +14,7 @@ export const geminiService = {
       model: 'gemini-3-pro-preview',
       config: {
         thinkingConfig: { thinkingBudget: 32768 },
-        systemInstruction: "You are the AI Assistant for Nexus Digital, a premium web development agency. You are professional, knowledgeable, and helpful. You help clients understand our services (Web Dev, E-commerce, UI/UX, SEO) and can think through complex technical problems."
+        systemInstruction: "You are the AI Strategy Director for Nexus Studio. You provide creative, strategic, and high-level advice on digital transformation. Be bold, visionary, and professional."
       }
     });
   },
@@ -74,35 +74,11 @@ export const geminiService = {
   },
 
   /**
-   * Image Editing
-   */
-  async editImage(base64Data: string, mimeType: string, instruction: string) {
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          { inlineData: { data: base64Data, mimeType } },
-          { text: instruction }
-        ]
-      }
-    });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    return null;
-  },
-
-  /**
    * Video Generation (Veo)
    */
-  async generateVideo(prompt: string, aspectRatio: "16:9" | "9:16" = "16:9", startImage?: { data: string, type: string }) {
+  async generateVideo(prompt: string, aspectRatio: "16:9" | "9:16" = "16:9") {
     const ai = getAIClient();
-    
-    const params: any = {
+    let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
       prompt,
       config: {
@@ -110,19 +86,10 @@ export const geminiService = {
         resolution: '720p',
         aspectRatio
       }
-    };
-
-    if (startImage) {
-      params.image = {
-        imageBytes: startImage.data,
-        mimeType: startImage.type
-      };
-    }
-
-    let operation = await ai.models.generateVideos(params);
+    });
 
     while (!operation.done) {
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 8000));
       operation = await ai.operations.getVideosOperation({ operation });
     }
 
@@ -133,31 +100,30 @@ export const geminiService = {
   },
 
   /**
-   * Text-to-Speech
+   * Live Voice Strategy Session
    */
-  async textToSpeech(text: string) {
+  async connectLive(callbacks: {
+    onopen: () => void;
+    onmessage: (msg: any) => void;
+    onerror: (e: any) => void;
+    onclose: (e: any) => void;
+  }) {
     const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text }] }],
+    return ai.live.connect({
+      model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+      callbacks,
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
-          },
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
         },
-      },
+        systemInstruction: "You are the Nexus Studio Voice Consultant. You help potential clients brainstorm creative digital project ideas in real-time. You are energetic, inspiring, and very knowledgeable about web tech and design trends."
+      }
     });
-
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) return null;
-    
-    return base64Audio;
   }
 };
 
-// Audio Utilities for TTS/Live
+// Audio Utilities
 export const audioUtils = {
   decode(base64: string) {
     const binaryString = atob(base64);
@@ -197,7 +163,7 @@ export const audioUtils = {
     return btoa(binary);
   },
 
-  createBlob(data: Float32Array): { data: string, mimeType: string } {
+  createBlob(data: Float32Array): any {
     const l = data.length;
     const int16 = new Int16Array(l);
     for (let i = 0; i < l; i++) {
