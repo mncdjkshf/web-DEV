@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Nexus AI Digital Agency",
+  "description": "A premium, conversion-focused digital agency website showcasing professional web development services integrated with cutting-edge Gemini AI capabilities including image/video generation and real-time voice assistance.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
